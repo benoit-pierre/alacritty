@@ -325,34 +325,12 @@ impl Selection {
 
     fn range_simple(
         &self,
-        mut start: Anchor,
-        mut end: Anchor,
-        columns: usize,
+        start: Anchor,
+        end: Anchor,
+        _columns: usize,
     ) -> Option<SelectionRange> {
         if self.is_empty() {
             return None;
-        }
-
-        // Remove last cell if selection ends to the left of a cell.
-        if end.side == Side::Left && start.point != end.point {
-            // Special case when selection ends to left of first cell.
-            if end.point.column == 0 {
-                end.point.column = Column(columns - 1);
-                end.point.line -= 1;
-            } else {
-                end.point.column -= 1;
-            }
-        }
-
-        // Remove first cell if selection starts at the right of a cell.
-        if start.side == Side::Right && start.point != end.point {
-            start.point.column += 1;
-
-            // Wrap to next line when selection starts to the right of last column.
-            if start.point.column == columns {
-                start.point.column = Column(0);
-                start.point.line += 1;
-            }
         }
 
         Some(SelectionRange { start: start.point, end: end.point, is_block: false })
@@ -367,16 +345,6 @@ impl Selection {
         if start.point.column > end.point.column {
             mem::swap(&mut start.side, &mut end.side);
             mem::swap(&mut start.point.column, &mut end.point.column);
-        }
-
-        // Remove last cell if selection ends to the left of a cell.
-        if end.side == Side::Left && start.point != end.point && end.point.column.0 > 0 {
-            end.point.column -= 1;
-        }
-
-        // Remove first cell if selection starts at the right of a cell.
-        if start.side == Side::Right && start.point != end.point {
-            start.point.column += 1;
         }
 
         Some(SelectionRange { start: start.point, end: end.point, is_block: true })
@@ -485,7 +453,7 @@ mod tests {
         selection.update(Point::new(Line(1), Column(1)), Side::Right);
 
         assert_eq!(selection.to_range(&term(2, 5)).unwrap(), SelectionRange {
-            start: Point::new(Line(0), Column(2)),
+            start: Point::new(Line(0), Column(1)),
             end: Point::new(Line(1), Column(1)),
             is_block: false,
         });
@@ -510,7 +478,7 @@ mod tests {
         selection.update(Point::new(Line(0), Column(0)), Side::Right);
 
         assert_eq!(selection.to_range(&term(2, 5)).unwrap(), SelectionRange {
-            start: Point::new(Line(0), Column(1)),
+            start: Point::new(Line(0), Column(0)),
             end: Point::new(Line(1), Column(1)),
             is_block: false,
         });
@@ -555,7 +523,7 @@ mod tests {
         selection = selection.rotate(&size, &(Line(0)..Line(size.0 as i32)), 4).unwrap();
 
         assert_eq!(selection.to_range(&term(size.0, size.1)).unwrap(), SelectionRange {
-            start: Point::new(Line(0), Column(2)),
+            start: Point::new(Line(0), Column(1)),
             end: Point::new(Line(5), Column(3)),
             is_block: false,
         });
@@ -570,7 +538,7 @@ mod tests {
         selection = selection.rotate(&size, &(Line(0)..Line(size.0 as i32)), 4).unwrap();
 
         assert_eq!(selection.to_range(&term(size.0, size.1)).unwrap(), SelectionRange {
-            start: Point::new(Line(0), Column(2)),
+            start: Point::new(Line(0), Column(1)),
             end: Point::new(Line(5), Column(3)),
             is_block: true
         });
@@ -643,7 +611,7 @@ mod tests {
         selection = selection.rotate(&size, &(Line(1)..Line(size.0 as i32 - 1)), 4).unwrap();
 
         assert_eq!(selection.to_range(&term(size.0, size.1)).unwrap(), SelectionRange {
-            start: Point::new(Line(1), Column(2)),
+            start: Point::new(Line(1), Column(1)),
             end: Point::new(Line(3), Column(3)),
             is_block: true,
         });

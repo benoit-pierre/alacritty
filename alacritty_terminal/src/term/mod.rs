@@ -2694,7 +2694,7 @@ mod tests {
         if let Some(s) = term.selection.as_mut() {
             s.update(Point { line: Line(3), column: Column(0) }, Side::Left);
         }
-        assert_eq!(term.selection_to_string(), Some(String::from("\n\"aa\n\"a\n\"aa")));
+        assert_eq!(term.selection_to_string(), Some(String::from("\n\"aaa\n\"a a\n\"aaa")));
 
         // The last column.
         if let Some(s) = term.selection.as_mut() {
